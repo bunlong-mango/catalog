@@ -20,7 +20,7 @@
             <v-col lg="3" md="4" sm="6" cols="12">
               <v-card max-width="400px" min-height="400px">
                 <v-img v-if="item.flags?.png" :src="item.flags?.png" :alt="item.name.official"></v-img>
-                <v-card-title class="title">
+                <v-card-title class="title" @click="onShowDialog(item)">
                   {{ item.name?.official }}
                 </v-card-title>
                 <v-card-text>
@@ -39,6 +39,7 @@
         <v-pagination v-model="page" :length="pageCount"></v-pagination>
       </template>
     </v-data-iterator>
+    <CountryDialog v-model="countryDialog.show" :item="countryDialog.item" />
   </v-container>
 </template>
   
@@ -48,6 +49,7 @@ import { ofetch } from 'ofetch'
 import { join, isNil, throttle } from 'lodash-es'
 import LabelValue from './LabelValue.vue'
 import { getNativeName } from '@/utils/country.utils'
+import CountryDialog from './CountryDialog.vue'
 
 // Search
 const textToSearch = ref('')
@@ -87,6 +89,16 @@ const setSortBy = (val: any) => {
 
 // Paging
 const page = ref(1)
+
+// Dialog
+const countryDialog = ref({
+  show: false,
+  item: null
+})
+const onShowDialog = (item: any) => {
+  countryDialog.value.show = true
+  countryDialog.value.item = item
+}
 
 // Catalog Data
 const URL_COUNTRY = 'https://restcountries.com/v3.1/all'
