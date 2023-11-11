@@ -13,13 +13,13 @@
     </v-row>
 
     <v-data-iterator v-model:sort-by="sortBy" :search="textToSearch" :custom-filter="filterByName" filter-keys="name"
-      :items="items" items-per-page="25">
+      :page="page" :items="items" items-per-page="25">
       <template v-slot:default="{ items }">
         <v-row>
           <template v-for="({ raw: item }, i) in items" :key="i">
             <v-col lg="3" md="4" sm="6" cols="12">
               <v-card max-width="400px" min-height="400px">
-                <v-img :src="item.flags?.png" :alt="item.name.official"></v-img>
+                <v-img v-if="item.flags?.png" :src="item.flags?.png" :alt="item.name.official"></v-img>
                 <v-card-title class="title">
                   {{ item.name?.official }}
                 </v-card-title>
@@ -34,6 +34,9 @@
             </v-col>
           </template>
         </v-row>
+      </template>
+      <template #footer="{ pageCount }">
+        <v-pagination v-model="page" :length="pageCount"></v-pagination>
       </template>
     </v-data-iterator>
   </v-container>
@@ -82,9 +85,12 @@ const setSortBy = (val: any) => {
   sortBy.value = [val]
 }
 
-const items = ref([])
+// Paging
+const page = ref(1)
 
+// Catalog Data
 const URL_COUNTRY = 'https://restcountries.com/v3.1/all'
+const items = ref([])
 try {
   const data = await ofetch(URL_COUNTRY)
   items.value = data
