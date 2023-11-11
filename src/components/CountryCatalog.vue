@@ -1,8 +1,19 @@
 <template>
   <v-container fluid>
     <div class="text-h4 mb-3">Country Catalog</div>
+    <v-row>
+      <v-col md="4" sm="6" lg="3" cols="12">
+        <v-text-field :model-value="textToSearch" placeholder="Search country name" clearable density="compact"
+          hide-details="auto" variant="outlined" @update:model-value="setTextToSearch" />
+      </v-col>
+      <v-col md="4" sm="6" lg="3" cols="12">
+        <v-select label="Sort Name By" density="compact" hide-details="auto" variant="outlined" :items="sortByOptions"
+          :model-value="sortBy" @update:model-value="setSortBy" />
+      </v-col>
+    </v-row>
 
-    <v-data-iterator :items="items" items-per-page="25">
+    <v-data-iterator v-model:sort-by="sortBy" :search="textToSearch" :custom-filter="filterByName" filter-keys="name"
+      :items="items" items-per-page="25">
       <template v-slot:default="{ items }">
         <v-row>
           <template v-for="({ raw: item }, i) in items" :key="i">
@@ -31,9 +42,45 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { ofetch } from 'ofetch'
-import { join } from 'lodash-es'
+import { join, isNil, throttle } from 'lodash-es'
 import LabelValue from './LabelValue.vue'
 import { getNativeName } from '@/utils/country.utils'
+
+// Search
+const textToSearch = ref('')
+const setTextToSearch = throttle((val: string) => {
+  textToSearch.value = val
+}, 250, { leading: true })
+const filterByName = (value: any, query: string) => {
+  if (isNil(value) || isNil(query)) {
+    return false
+  }
+  const officialName = value.official ?? ''
+  const commonName = value.common ?? ''
+  const nativeName = getNativeName({ name: value })
+  const fullName = officialName + commonName + nativeName
+  return fullName.toString().toLocaleUpperCase().indexOf(query.toString().toLocaleUpperCase()) !== -1
+}
+
+// Sort
+type SortItem = {
+  key: string;
+  order?: boolean | 'asc' | 'desc';
+};
+const sortBy = ref<SortItem[]>([{ key: 'name.official', order: 'asc' }])
+const sortByOptions = [
+  {
+    title: 'Ascending',
+    value: { key: 'name.official', order: 'asc' }
+  },
+  {
+    title: 'Descending',
+    value: { key: 'name.official', order: 'desc' }
+  }
+]
+const setSortBy = (val: any) => {
+  sortBy.value = [val]
+}
 
 const items = ref([])
 
